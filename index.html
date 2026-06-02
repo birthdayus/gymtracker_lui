@@ -449,7 +449,8 @@ function ld(k){try{const s=localStorage.getItem('gv2_'+k);return s?JSON.parse(s)
 function sv(k,v){try{localStorage.setItem('gv2_'+k,JSON.stringify(v));}catch(e){}}
 
 const _today0 = new Date(); _today0.setHours(0,0,0,0);
-let startDate = ld('start') ? new Date(ld('start')) : _today0;
+function parseLocalDate(s){const p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+let startDate = ld('start') ? parseLocalDate(ld('start')) : _today0;
 
 // ── PHASE (Elvis: already 9 weeks in, phases are longer) ──
 function getWeekNum(){return Math.floor(Math.round((TODAY()-startDate)/(864e5))/7)+1;}
@@ -760,11 +761,13 @@ function resetAll(){
   document.getElementById('confirm-box').classList.remove('open');
   // ── PRE-SET: Day 1 = 1 June 2026, already completed ──
 if(!ld('start')){
-  sv('start','2026-06-01');
-  startDate=new Date(2026,5,1); // June 1 local time
+  startDate=new Date(2026,5,1); // June 1 LOCAL time (not UTC)
+  sv('start',ds(startDate));   // saves '2026-06-01' via local ds()
 }
 if(!ld('sess')){
-  const presetSess={'2026-06-01':{type:'A',done:true,exDone:[],exSkipped:[]}};
+  const d1key=ds(new Date(2026,5,1)); // '2026-06-01' in local time
+  const presetSess={};
+  presetSess[d1key]={type:'A',done:true,exDone:[],exSkipped:[]};
   sv('sess',presetSess);
   sessions=presetSess;
 } else {
@@ -937,11 +940,13 @@ function renderDlog(){
 
 // ── PRE-SET: Day 1 = 1 June 2026, already completed ──
 if(!ld('start')){
-  sv('start','2026-06-01');
-  startDate=new Date(2026,5,1); // June 1 local time
+  startDate=new Date(2026,5,1); // June 1 LOCAL time (not UTC)
+  sv('start',ds(startDate));   // saves '2026-06-01' via local ds()
 }
 if(!ld('sess')){
-  const presetSess={'2026-06-01':{type:'A',done:true,exDone:[],exSkipped:[]}};
+  const d1key=ds(new Date(2026,5,1)); // '2026-06-01' in local time
+  const presetSess={};
+  presetSess[d1key]={type:'A',done:true,exDone:[],exSkipped:[]};
   sv('sess',presetSess);
   sessions=presetSess;
 } else {
