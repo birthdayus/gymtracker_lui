@@ -493,55 +493,9 @@ function dInM(y,m){return new Date(y,m,0).getDate();}
 function renderToday(){
   const T=TODAY(),dstr=ds(T);
   const sn=sessNum(T);
-  const type=todayType();
-  const W=WORKOUTS[type];
-  if(!sessions[dstr])sessions[dstr]={type,done:false,exDone:[]};
-  const sess=sessions[dstr];
 
   document.getElementById('cur-day').textContent='Day '+sn;
   document.getElementById('cur-date').textContent=T.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short',year:'numeric'});
-  // rest day vs workout day
-  if(!isWD(T)){
-    // REST DAY
-    document.getElementById('workout-sh').textContent='Rest Day 💤';
-    document.getElementById('wtype-row').style.display='none';
-    document.getElementById('ex-list').innerHTML='';
-    document.getElementById('ex-pbar').style.width='0%';
-    document.getElementById('ex-count').textContent='';
-    document.getElementById('stat-today').textContent='休';
-    document.getElementById('done-btn').style.display='none';
-    let nx=new Date(T);nx.setDate(nx.getDate()+1);
-    while(!isWD(nx))nx.setDate(nx.getDate()+1);
-    const nxType=(['A','B','C'])[(sessNum(nx)-1)%3];
-    const nxLabel={'A':'下肢+臀','B':'上肢+姿勢','C':'核心+跑步'}[nxType];
-    const nxW=WORKOUTS[nxType];
-    document.getElementById('next-info').textContent='下次: '+nx.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+' · '+nxLabel;
-    document.getElementById('next-info').style.display='block';
-    // show next session exercise preview
-    const preview=document.getElementById('rest-preview');
-    preview.style.display='block';
-    preview.innerHTML='<div style="margin-top:14px;border-top:0.5px solid var(--bd);padding-top:12px"><div style="font-size:9px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;font-family:var(--fm)">下次 Session 預覽</div>'+
-      nxW.exercises.map((eid,i)=>{
-        const ex=EXERCISES[eid];
-        return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--bd)">'+
-          '<span style="font-size:10px;color:var(--tx3);width:14px;font-family:var(--fm)">'+(i+1)+'</span>'+
-          '<span style="font-size:13px;color:var(--tx2);flex:1">'+ex.name+'</span>'+
-          '<span style="font-size:10px;color:var(--tx3);font-family:var(--fm)">'+getTarget(ex)+'</span>'+
-        '</div>';
-      }).join('')+'</div>';
-  } else {
-    // WORKOUT DAY
-    document.getElementById('workout-sh').textContent="Today's workout";
-    document.getElementById('wtype-row').style.display='flex';
-    document.getElementById('done-btn').style.display='';
-    document.getElementById('rest-preview').style.display='none';
-    document.getElementById('next-info').style.display='none';
-  }
-
-  const badge=document.getElementById('day-badge');
-  const bCl={'A':'push','B':'pull','C':'core'};
-  badge.textContent=W.label+' Day';
-  badge.className='hbadge '+bCl[type];
 
   const done=Object.values(sessions).filter(s=>s.done).length;
   const total=sessNum(T);
@@ -549,13 +503,72 @@ function renderToday(){
   document.getElementById('stat-total').textContent=done;
   document.getElementById('stat-pct').textContent=total>0?Math.round(done/total*100)+'%':'—';
 
+  // ── REST DAY ──
+  if(!isWD(T)){
+    const badge=document.getElementById('day-badge');
+    badge.textContent='Rest Day';badge.className='hbadge rest';
+    document.getElementById('phase-pill').textContent='';
+    document.getElementById('next-info').style.display='none';
+    document.getElementById('workout-sh').textContent='Rest Day 💤';
+    document.getElementById('wtype-row').style.display='none';
+    document.getElementById('ex-list').innerHTML='';
+    document.getElementById('ex-pbar').style.width='0%';
+    document.getElementById('ex-count').textContent='';
+    document.getElementById('stat-today').textContent='休';
+    document.getElementById('done-btn').style.display='none';
+
+    // find next workout day
+    let nx=new Date(T);nx.setDate(nx.getDate()+1);
+    while(!isWD(nx))nx.setDate(nx.getDate()+1);
+    const nxSn=sessNum(nx);
+    const nxType=(['A','B','C'])[(nxSn-1)%3];
+    const nxLabel={'A':'下肢+臀','B':'上肢+姿勢','C':'核心+跑步'}[nxType];
+    const nxW=WORKOUTS[nxType];
+
+    // preview section
+    const preview=document.getElementById('rest-preview');
+    preview.style.display='block';
+    preview.innerHTML=
+      '<div style="margin-bottom:10px">'+
+        '<span style="font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--tx3);font-family:var(--fm)">下次 Session</span> '+
+        '<span style="font-size:11px;color:var(--g);font-weight:700;">'+
+          nx.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+' · '+nxLabel+
+        '</span>'+
+      '</div>'+
+      nxW.exercises.map((eid,i)=>{
+        const ex=EXERCISES[eid];
+        return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd)">'+
+          '<span style="font-size:10px;color:var(--tx3);width:16px;font-family:var(--fm)">'+(i+1)+'</span>'+
+          '<span style="font-size:13px;color:var(--tx2);flex:1">'+ex.name+'</span>'+
+          '<span style="font-size:10px;color:var(--tx3);font-family:var(--fm)">'+getTarget(ex)+'</span>'+
+        '</div>';
+      }).join('');
+    return; // ← stop here, no exercise rendering
+  }
+
+  // ── WORKOUT DAY ──
+  document.getElementById('rest-preview').style.display='none';
+  document.getElementById('next-info').style.display='none';
+  document.getElementById('workout-sh').textContent="Today's workout";
+  document.getElementById('wtype-row').style.display='flex';
+  document.getElementById('done-btn').style.display='';
+
+  const type=todayType();
+  const W=WORKOUTS[type];
+  if(!sessions[dstr])sessions[dstr]={type,done:false,exDone:[],exSkipped:[]};
+  const sess=sessions[dstr];
+
+  const badge=document.getElementById('day-badge');
+  badge.textContent=({'A':'下肢+臀','B':'上肢+姿勢','C':'核心+跑步'}[type]||type)+' Day';
+  badge.className='hbadge '+{'A':'push','B':'pull','C':'core'}[type];
+  document.getElementById('phase-pill').textContent=phaseLabel();
+
   // type tabs
   const tabRow=document.getElementById('wtype-row');tabRow.innerHTML='';
   ['A','B','C'].forEach(t=>{
     const btn=document.createElement('div');
-    const cl={'A':'push','B':'pull','C':'core'}[t];
     const col={'A':'var(--push)','B':'var(--pull)','C':'var(--core)'}[t];
-    btn.style.cssText=`flex:1;padding:9px 4px;border-radius:8px;border:0.5px solid;text-align:center;font-size:10px;font-weight:700;letter-spacing:.07em;cursor:pointer;transition:all .15s;text-transform:uppercase;`;
+    btn.style.cssText='flex:1;padding:9px 4px;border-radius:8px;border:0.5px solid;text-align:center;font-size:10px;font-weight:700;letter-spacing:.07em;cursor:pointer;transition:all .15s;text-transform:uppercase;';
     const isOn=sess.type===t||(!sess.type&&type===t);
     btn.style.color=col;btn.style.borderColor=col;btn.style.background=isOn?col+'1f':'transparent';
     btn.textContent=WORKOUTS[t].label;
@@ -569,20 +582,21 @@ function renderToday(){
   const list=document.getElementById('ex-list');list.innerHTML='';
   CW.exercises.forEach(eid=>{
     const ex=EXERCISES[eid];
-    const isDone=sess.exDone.includes(eid);
-    const wrap=document.createElement('div');wrap.className='exwrap';
+    const isDone=(sess.exDone||[]).includes(eid);
+    const isSkipped=(sess.exSkipped||[]).includes(eid);
     const hasTimer=ex.prog?ex.prog[0].sec!==undefined:!!ex.timer;
-    const isSkipped=sess.exSkipped&&sess.exSkipped.includes(eid);
+    const wrap=document.createElement('div');wrap.className='exwrap';
     wrap.innerHTML=`<div class="exrow${isDone?' done':isSkipped?' skipped':''}" data-id="${eid}">
       <div class="excheck">${isDone?'✓':''}</div>
       <div class="exinfo"><div class="exname">${ex.name}</div><div class="extarget">${getTarget(ex)}</div></div>
       ${(hasTimer&&!isSkipped)?('<button class="ex-guide-btn" style="background:rgba(200,240,96,0.10);border-color:rgba(200,240,96,0.35);color:var(--g)" data-eid="'+eid+'" title="Timer" data-timer>⏱</button>'):''}
-      <button class="skip-btn${isSkipped?' active':''}" data-eid="${eid}" title="Skip (injured/unable)" data-skip>傷</button>
+      <button class="skip-btn${isSkipped?' active':''}" data-eid="${eid}" title="Skip" data-skip>傷</button>
       <button class="ex-guide-btn" data-eid="${eid}" title="How to">?</button>
     </div>`;
     wrap.querySelector('.exrow').addEventListener('click',function(e){
       if(e.target.closest('.ex-guide-btn')||e.target.closest('.skip-btn'))return;
-      if(sess.exSkipped&&sess.exSkipped.includes(eid))return;
+      if((sess.exSkipped||[]).includes(eid))return;
+      if(!sess.exDone)sess.exDone=[];
       const idx=sess.exDone.indexOf(eid);
       if(idx>-1)sess.exDone.splice(idx,1);else sess.exDone.push(eid);
       sv('sess',sessions);renderToday();
@@ -594,7 +608,7 @@ function renderToday(){
         const si=sess.exSkipped.indexOf(eid);
         if(si>-1){sess.exSkipped.splice(si,1);}else{
           sess.exSkipped.push(eid);
-          const di=sess.exDone.indexOf(eid);if(di>-1)sess.exDone.splice(di,1);
+          const di=(sess.exDone||[]).indexOf(eid);if(di>-1)sess.exDone.splice(di,1);
         }
         sv('sess',sessions);renderToday();
       }
@@ -609,15 +623,14 @@ function renderToday(){
     list.appendChild(wrap);
   });
 
-  // only count exercises belonging to today's workout type
   const doneCount=(sess.exDone||[]).filter(id=>CW.exercises.includes(id)&&!(sess.exSkipped||[]).includes(id)).length;
   const skippedCount=(sess.exSkipped||[]).filter(id=>CW.exercises.includes(id)).length;
-  const eligible=CW.exercises.length; // skipped still counts against total
+  const eligible=CW.exercises.length;
   const pct=eligible>0?Math.round(doneCount/eligible*100):0;
   document.getElementById('ex-pbar').style.width=pct+'%';
   const skipLabel=skippedCount>0?' ('+skippedCount+' skipped)':'';
   document.getElementById('ex-count').textContent=doneCount+' / '+eligible+' exercises'+skipLabel;
-  document.getElementById('stat-today').textContent=eligible>0?(Math.round(doneCount/eligible*100)+'%'):'—';
+  document.getElementById('stat-today').textContent=eligible>0?(pct+'%'):'—';
 
   const btn=document.getElementById('done-btn');
   if(sess.done){btn.textContent='✓ Session completed!';btn.className='cbtn cbtn-outline';}
