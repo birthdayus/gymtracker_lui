@@ -683,7 +683,7 @@ function renderLog(){
     const cell=document.createElement('div');
     if(isWorkout){
       const sn=sessNum(new Date(d)),isDone=sessions[dstr]?.done;
-      cell.className='cday'+(isDone?' done':isT?' today':isFuture?' future':'');
+      cell.className='cday'+(isDone?(isT?' done today':' done'):isT?' today':isFuture?' future':'');
       cell.innerHTML='<span style="font-size:9px;opacity:0.6;display:block;line-height:1">'+d.getDate()+'</span><span style="font-size:10px;font-weight:700">D'+sn+'</span>';
       cell.title=new Date(d).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+' · Day '+sn;
     } else {
@@ -777,14 +777,12 @@ if(!ld('start')){
   startDate=new Date(2026,5,1); // June 1 LOCAL time (not UTC)
   sv('start',ds(startDate));   // saves '2026-06-01' via local ds()
 }
-if(!ld('sess')){
-  const d1key=ds(new Date(2026,5,1)); // '2026-06-01' in local time
-  const presetSess={};
-  presetSess[d1key]={type:'A',done:true,exDone:[],exSkipped:[]};
-  sv('sess',presetSess);
-  sessions=presetSess;
-} else {
-  sessions=ld('sess')||{};
+// Always load sessions, then ensure June 1 is marked done
+sessions=ld('sess')||{};
+const d1key=ds(new Date(2026,5,1));
+if(!sessions[d1key]||!sessions[d1key].done){
+  sessions[d1key]={type:'A',done:true,exDone:[],exSkipped:[]};
+  sv('sess',sessions);
 }
 
 renderToday();renderLog();renderProgress();renderPlan();
@@ -956,14 +954,12 @@ if(!ld('start')){
   startDate=new Date(2026,5,1); // June 1 LOCAL time (not UTC)
   sv('start',ds(startDate));   // saves '2026-06-01' via local ds()
 }
-if(!ld('sess')){
-  const d1key=ds(new Date(2026,5,1)); // '2026-06-01' in local time
-  const presetSess={};
-  presetSess[d1key]={type:'A',done:true,exDone:[],exSkipped:[]};
-  sv('sess',presetSess);
-  sessions=presetSess;
-} else {
-  sessions=ld('sess')||{};
+// Always load sessions, then ensure June 1 is marked done
+sessions=ld('sess')||{};
+const d1key=ds(new Date(2026,5,1));
+if(!sessions[d1key]||!sessions[d1key].done){
+  sessions[d1key]={type:'A',done:true,exDone:[],exSkipped:[]};
+  sv('sess',sessions);
 }
 
 renderToday();renderLog();renderProgress();renderPlan();
