@@ -486,8 +486,12 @@ function TODAY(){const d=new Date();d.setHours(0,0,0,0);return d;}
 function isWD(d){
   const diff=Math.round((d-startDate)/(864e5));
   if(diff<0)return false;
-  const dow=diff%7;
-  return dow===0||dow===2||dow===4;
+  if(diff<=4)return diff%2===0;            // June 1,3,5 every-other-day
+  const june9=new Date(2026,5,9);
+  const d2=Math.round((d-june9)/(864e5));
+  if(d2<0)return false;                    // June 6-8 all rest
+  const dow=d2%7;
+  return dow===0||dow===2||dow===4;        // Tue/Thu/Sat from June 9
 }
 function sessNum(d){let c=0,x=new Date(startDate);while(x<=d){if(isWD(x))c++;x.setDate(x.getDate()+1);}return c;}
 function todayType(){const n=sessNum(TODAY());const t=['A','B','C'];return t[(n-1)%3]||'A';}
@@ -783,15 +787,17 @@ function resetAll(){
   document.getElementById('confirm-box').classList.remove('open');
   // ── PRE-SET: Day 1 = 1 June 2026, already completed ──
 if(!ld('start')){
-  startDate=new Date(2026,5,1); // June 1 LOCAL time (not UTC)
+  startDate=new Date(2026,5,1); // June 1 LOCAL time
   sv('start',ds(startDate));   // saves '2026-06-01' via local ds()
 }
-// Always load sessions, then ensure June 1 is marked done
+// Always ensure June 1 (D1) and June 3 (D2) are marked done
 sessions=ld('sess')||{};
-const d1key=ds(new Date(2026,5,1));
-if(!sessions[d1key]||!sessions[d1key].done){
-  sessions[d1key]={type:'A',done:true,exDone:[],exSkipped:[]};
-  sv('sess',sessions);
+const _d1=ds(new Date(2026,5,1)),_d2=ds(new Date(2026,5,3));
+if(!sessions[_d1]||!sessions[_d1].done){
+  sessions[_d1]={type:'A',done:true,exDone:[],exSkipped:[]};sv('sess',sessions);
+}
+if(!sessions[_d2]||!sessions[_d2].done){
+  sessions[_d2]={type:'B',done:true,exDone:[],exSkipped:[]};sv('sess',sessions);
 }
 
 
@@ -976,15 +982,17 @@ function renderDlog(){
 
 // ── PRE-SET: Day 1 = 1 June 2026, already completed ──
 if(!ld('start')){
-  startDate=new Date(2026,5,1); // June 1 LOCAL time (not UTC)
+  startDate=new Date(2026,5,1); // June 1 LOCAL time
   sv('start',ds(startDate));   // saves '2026-06-01' via local ds()
 }
-// Always load sessions, then ensure June 1 is marked done
+// Always ensure June 1 (D1) and June 3 (D2) are marked done
 sessions=ld('sess')||{};
-const d1key=ds(new Date(2026,5,1));
-if(!sessions[d1key]||!sessions[d1key].done){
-  sessions[d1key]={type:'A',done:true,exDone:[],exSkipped:[]};
-  sv('sess',sessions);
+const _d1=ds(new Date(2026,5,1)),_d2=ds(new Date(2026,5,3));
+if(!sessions[_d1]||!sessions[_d1].done){
+  sessions[_d1]={type:'A',done:true,exDone:[],exSkipped:[]};sv('sess',sessions);
+}
+if(!sessions[_d2]||!sessions[_d2].done){
+  sessions[_d2]={type:'B',done:true,exDone:[],exSkipped:[]};sv('sess',sessions);
 }
 
 
