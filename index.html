@@ -691,8 +691,9 @@ function renderToday(){
 }
 
 function markDone(){
-  const dstr=ds(TODAY());
-  if(!sessions[dstr])sessions[dstr]={type:todayType(),done:false,exDone:[]};
+  const dstr=ds(viewDate); // use viewDate so past-day completion works
+  const type=(['A','B','C'])[(sessNum(viewDate)-1)%3];
+  if(!sessions[dstr])sessions[dstr]={type,done:false,exDone:[],exSkipped:[]};
   sessions[dstr].done=!sessions[dstr].done;
   sv('sess',sessions);renderToday();renderLog();renderProgress();
 }
